@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Lấy Phụ Đề YouTube{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Lấy Phụ Đề YouTube</h1>
+    
+    <form method="POST" class="mb-8">
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <input type="text" name="video_url" placeholder="Nhập URL video YouTube" 
+                   class="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-300">
+                Lấy Phụ Đề
+            </button>
+        </div>
+    </form>
+
+    {% if error %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ error }}</span>
+    </div>
+    {% endif %}
+
+    {% if transcript %}
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-semibold mb-4">Phụ đề cho video:</h2>
+        {% if video_id %}
+        <div class="mb-4">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video_id }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+        {% endif %}
+        <div class="mb-4 space-x-2">
+            <button id="toggle-time-info" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300">Ẩn/Hiện thông tin thời gian</button>
+            <button id="copy-text" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-300">Sao chép văn bản</button>
+            <button id="show-full-text" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition duration-300">Hiển thị văn bản đầy đủ</button>
+        </div>
+        <div id="transcript-container" class="space-y-2">
+            {% for entry in transcript %}
+            <p><span class="font-semibold time-info">{{ entry.start|round(2) }}s:</span> {{ entry.text }}</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('toggle-time-info').addEventListener('click', function() {
+    var container = document.getElementById('transcript-container');
+    container.classList.toggle('hide-time');
+});
+
+document.getElementById('copy-text').addEventListener('click', function() {
+    var text = Array.from(document.querySelectorAll('#transcript-container p'))
+        .map(p => p.innerText.replace(/^\d+(\.\d+)?s:\s/, ''))
+        .join(' ');
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Đã sao chép văn bản!');
+    }, function(err) {
+        console.error('Không thể sao chép: ', err);
+    });
+});
+
+document.getElementById('show-full-text').addEventListener('click', function() {
+    var fullText = Array.from(document.querySelectorAll('#transcript-container p'))
+        .map(p => p.innerText.replace(/^\d+(\.\d+)?s:\s/, ''))
+        .join(' ');
+    document.getElementById('transcript-container').innerHTML = '<p>' + fullText + '</p>';
+});
+</script>
+
+<style>
+.hide-time .time-info {
+    display: none;
+}
+</style>
+{% endblock %}
