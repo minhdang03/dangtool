@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Lấy Phụ Đề YouTube{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Lấy Phụ Đề YouTube</h1>
+    
+    <form method="POST" class="mb-8">
+        <div class="space-y-4">
+            <textarea name="video_urls" 
+                      placeholder="Nhập URL video YouTube (mỗi URL một dòng)" 
+                      rows="5"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-300">
+                Lấy Phụ Đề
+            </button>
+        </div>
+    </form>
+
+    {% if results %}
+        {% if results.transcripts %}
+        <div class="space-y-8">
+            {% for video_id, item in results.transcripts.items() %}
+            <div class="bg-white shadow-md rounded-lg p-6" onclick="toggleContent(this)">
+                <div class="cursor-pointer video-header mb-4 w-full">
+                    <h2 class="text-2xl font-semibold">Đã nấy xong phụ đề video {{ item.index }}:</h2>
+                </div>
+
+                <div class="content-container">
+                    <div class="mb-4">
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video_id }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    </div>
+                    <div class="mb-4 space-x-2">
+                        <button class="toggle-time-info bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300">Ẩn/Hiện thời gian</button>
+                        <button class="copy-text bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-300">Sao chép</button>
+                        <button class="show-full-text bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition duration-300">Văn bản đầy đủ</button>
+                    </div>
+                    <div class="transcript-container space-y-2">
+                        {% for entry in item.data %}
+                        <p><span class="font-semibold time-info">{{ entry.start|round(2) }}s:</span> {{ entry.text }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if results.failed_urls %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8" role="alert">
+            <h4 class="font-bold mb-2">Mày gửi clgt?</h4>
+            <ul class="list-disc ml-6">
+            {% for failed in results.failed_urls %}
+                <li>
+                    {% if failed is mapping %}
+                        {{ failed.url }} - {{ failed.error }}
+                    {% else %}
+                        {{ failed }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if results.failed_videos %}
+        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mt-8" role="alert">
+            <h4 class="font-bold mb-2">Không thể lấy phụ đề cho các video sau:</h4>
+            <ul class="list-disc ml-6">
+            {% for failed in results.failed_videos %}
+                <li>
+                    {% if failed is mapping %}
+                        {{ failed.url }} - {{ failed.error }}
+                    {% else %}
+                        {{ failed }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<script>
+function toggleContent(header) {
+    const container = header.closest('.bg-white').querySelector('.content-container');
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+// Tự động thu gọn tất cả video trong chế độ nhiều video
+document.addEventListener('DOMContentLoaded', function() {
+    const videoContainers = document.querySelectorAll('.bg-white');
+    if (videoContainers.length > 1) {
+        videoContainers.forEach(container => {
+            const contentContainer = container.querySelector('.content-container');
+            if (contentContainer) {
+                contentContainer.style.display = 'none';
+            }
+        });
+    }
+});
+
+// Transcript controls
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('toggle-time-info')) {
+        const container = e.target.closest('.bg-white').querySelector('.transcript-container');
+        container.classList.toggle('hide-time');
+    }
+
+    if (e.target.classList.contains('copy-text')) {
+        const container = e.target.closest('.bg-white').querySelector('.transcript-container');
+        const text = Array.from(container.querySelectorAll('p'))
+            .map(p => p.innerText.replace(/^\d+(\.\d+)?s:\s/, ''))
+            .join(' ');
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Đã sao chép văn bản!');
+        });
+    }
+
+    if (e.target.classList.contains('show-full-text')) {
+        const container = e.target.closest('.bg-white').querySelector('.transcript-container');
+        const text = Array.from(container.querySelectorAll('p'))
+            .map(p => p.innerText.replace(/^\d+(\.\d+)?s:\s/, ''))
+            .join(' ');
+        container.innerHTML = '<p>' + text + '</p>';
+    }
+});
+</script>
+
+<style>
+.hide-time .time-info {
+    display: none;
+}
+
+.content-container {
+    transition: all 0.3s ease-in-out;
+}
+</style>
+{% endblock %}

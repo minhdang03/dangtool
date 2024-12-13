@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Công Cụ Cá Nhân{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind-output.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white h-14 sm:h-16 fixed w-full z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-14 sm:h-16">
+                <!-- Menu Toggle & Logo -->
+                <div class="flex items-center">
+                    <button id="menu-toggle" class="p-2 hover:bg-blue-700 rounded-lg focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <a href="{{ url_for('index') }}" class="ml-3 text-xl sm:text-2xl font-bold">DETUTHAYDANG</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex min-h-screen pt-14 sm:pt-16">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full w-64 bg-white z-40 transition-transform duration-300 ease-in-out
+                                  md:translate-x-0 md:static md:inset-0">
+            <nav class="h-full overflow-y-auto pt-14 sm:pt-16">
+                <div class="p-4 space-y-8">
+                    <!-- YouTube Section -->
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-3">YouTube</h2>
+                        <div class="space-y-2">
+                            <a href="{{ url_for('gettranscriptsubtitles.get_transcript_subtitles') }}" 
+                               class="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200">
+                                Get Transcript
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Text-to-Speech Section -->
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-3">Text-to-Speech</h2>
+                        <div class="space-y-2">
+                            <a href="{{ url_for('tts.tts') }}" 
+                               class="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200">
+                                Convert Text to Speech
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Instagram Section -->
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-3">Instagram</h2>
+                        <div class="space-y-2">
+                            <a href="{{ url_for('gioithieu') }}" 
+                               class="block px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200">
+                                Auto Like Stories
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 overflow-hidden">
+            <div class="container mx-auto p-4 sm:p-6 md:p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        });
+
+        // Handle active state
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('nav a').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('text-blue-600', 'bg-blue-50');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Trang Chủ - Công Cụ Cá Nhân{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6 font-sans">
+    <!-- Thông báo chính -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4 font-sans">Chào mừng đến với Đệ Tử Thầy Đăng</h1>
+        <p class="text-gray-600 font-sans">Trang web cung cấp các công cụ hữu ích cho cộng đồng</p>
+    </div>
+    
+    <!-- Changelog -->
+    <div class="bg-white shadow-sm rounded-lg p-6">
+        <h2 class="text-xl font-bold mb-4 text-gray-800 font-sans">Changelog</h2>
+        <div class="space-y-4">
+            <!-- Mục changelog mới nhất -->
+            <div class="border-l-4 border-blue-500 pl-4">
+                <div class="flex items-center text-sm text-gray-500 mb-1 font-sans">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span>26 tháng 03, 2024</span>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2 font-sans">Cập nhật tính năng Text-to-Speech</h3>
+                <ul class="list-disc list-inside text-gray-600 space-y-1 font-sans">
+                    <li>Thêm hỗ trợ cho nhiều ngôn ngữ và giọng nói</li>
+                    <li>Cải thiện giao diện người dùng</li>
+                    <li>Sửa lỗi không thể tải xuống tệp âm thanh</li>
+                </ul>
+            </div>
+
+            <div class="border-l-4 border-blue-500 pl-4">
+                <div class="flex items-center text-sm text-gray-500 mb-1 font-sans">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span>25 tháng 03, 2024</span>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2 font-sans">Cập nhật tính năng Get YouTube Transcript</h3>
+                <ul class="list-disc list-inside text-gray-600 space-y-1 font-sans">
+                    <li>Cải thiện thông báo lỗi URL không hợp lệ</li>
+                    <li>Phân loại rõ ràng giữa URL không hợp lệ và video không có phụ đề</li>
+                    <li>Sửa lỗi hiển thị thông báo trùng lặp</li>
+                </ul>
+            </div>
+
+            <!-- Mục changelog cũ -->
+            <div class="border-l-4 border-gray-300 pl-4">
+                <div class="flex items-center text-sm text-gray-500 mb-1 font-sans">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span>24 tháng 03, 2024</span>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2 font-sans">Thêm tính năng Get YouTube Transcript</h3>
+                <ul class="list-disc list-inside text-gray-600 space-y-1 font-sans">
+                    <li>Hỗ trợ tải phụ đề từ video YouTube</li>
+                    <li>Tự động phát hiện và ưu tiên phụ đề tiếng Việt</li>
+                    <li>Sửa lỗi hiển thị trên điện thoại</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

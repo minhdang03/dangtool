@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách Video đã tải{% endblock %}
+
+{% block extra_css %}
+<style>
+    .video-preview {
+        width: 200px;
+        height: 112px;
+        object-fit: cover;
+    }
+    .custom-context-menu {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+    }
+    .custom-context-menu button {
+        display: block;
+        width: 100%;
+        padding: 8px 16px;
+        border: none;
+        background-color: transparent;
+        text-align: left;
+        cursor: pointer;
+    }
+    .custom-context-menu button:hover {
+        background-color: #f1f1f1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="text-center mb-4">
+        <a href="{{ url_for('pornhub.download') }}" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
+            <i class="fas fa-download mr-2"></i>Tải video
+        </a>
+    </div>
+
+    <div id="message" class="hidden"></div>
+    <table class="w-full bg-white shadow-md rounded-lg overflow-hidden">
+        <thead class="bg-gray-200 text-gray-700">
+            <tr>
+                <th class="py-3 px-4 text-left">Preview</th>
+                <th class="py-3 px-4 text-left">Tên file</th>
+                <th class="py-3 px-4 text-left">Kích thước</th>
+                <th class="py-3 px-4 text-left">Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="videoList">
+        </tbody>
+    </table>
+</div>
+
+<div id="customContextMenu" class="custom-context-menu">
+    <button id="revealInFinder">Mở trong Finder</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function formatFileSize(sizeInBytes) {
+        const sizeInMB = sizeInBytes / (1024 * 1024);
+        if (sizeInMB >= 1024) {
+            return (sizeInMB / 1024).toFixed(2) + ' GB';
+        } else {
+            return sizeInMB.toFixed(2) + ' MB';
+        }
+    }
+
+    function showMessage(message, type) {
+        const messageElement = document.getElementById('message');
+        messageElement.textContent = message;
+        messageElement.className = `alert alert-${type}`;
+        messageElement.style.display = 'block';
+        setTimeout(() => {
+            messageElement.style.display = 'none';
+        }, 5000);
+    }
+
+    function loadVideos() {
+        fetch('/list_videos/')
+        .then(response => response.json())
+        .then(data => {
+            const videoList = document.getElementById('videoList');
+            videoList.innerHTML = '';
+            data.videos.forEach(video => {
+                const row = document.createElement('tr');
+                const formattedSize = formatFileSize(video.size);
+                row.innerHTML = `
+                    <td>
+                        <video class="video-preview" src="/${video.path}" controls muted></video>
+                    </td>
+                    <td>${video.name}</td>
+                    <td>${formattedSize}</td>
+                    <td>
+                        <button onclick="uploadToTelegram('${video.path}')" class="btn btn-primary btn-sm btn-action">
+                            <i class="fas fa-upload me-1"></i>Upload lên Telegram
+                        </button>
+                        <button onclick="deleteVideo('${video.path}')" class="btn btn-danger btn-sm btn-action">
+                            <i class="fas fa-trash-alt me-1"></i>Xóa
+                        </button>
+                    </td>
+                `;
+                row.addEventListener('contextmenu', (e) => showContextMenu(e, video.path));
+                videoList.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Lỗi khi tải danh sách video', 'danger');
+        });
+    }
+
+    function showContextMenu(event, videoPath) {
+        event.preventDefault();
+        const contextMenu = document.getElementById('customContextMenu');
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${event.pageX}px`;
+        contextMenu.style.top = `${event.pageY}px`;
+        
+        const revealButton = document.getElementById('revealInFinder');
+        revealButton.onclick = () => revealInFinder(videoPath);
+    }
+
+    function revealInFinder(videoPath) {
+        fetch('/reveal_in_finder/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({video_path: videoPath})
+        })
+        .then(response => response.json())
+        .then(data => {
+            showMessage(data.message, 'success');
+        })
+        .catch(error => {
+            showMessage("Lỗi khi mở thư mục: " + error, 'danger');
+        });
+    }
+
+    function uploadToTelegram(videoPath) {
+        showMessage('Đang tải lên Telegram...', 'info');
+        fetch('/uploadpornhubtotelegram/upload_to_telegram/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({video_path: videoPath})
+        })
+        .then(response => response.json())
+        .then(data => {
+            showMessage(data.message, 'success');
+        })
+        .catch(error => {
+            showMessage("Lỗi khi upload: " + error, 'danger');
+        });
+    }
+
+    function deleteVideo(videoPath) {
+        if (confirm('Bạn có chắc chắn muốn xóa video này?')) {
+            showMessage('Đang xóa video...', 'info');
+            fetch('/delete_video/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({video_path: videoPath})
+            })
+            .then(response => response.json())
+            .then(data => {
+                showMessage(data.message, 'success');
+                loadVideos();  // Reload the video list
+            })
+            .catch(error => {
+                showMessage("Lỗi khi xóa video: " + error, 'danger');
+            });
+        }
+    }
+
+    // Đóng menu ngữ cảnh khi click ra ngoài
+    document.addEventListener('click', (e) => {
+        const contextMenu = document.getElementById('customContextMenu');
+        if (e.target.offsetParent !== contextMenu) {
+            contextMenu.style.display = 'none';
+        }
+    });
+
+    // Load videos when the page is loaded
+    window.onload = loadVideos;
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Text-to-Speech{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Text to Speech</h1>
+            <p class="mt-2 text-gray-600">Convert your text into natural-sounding speech</p>
+        </div>
+
+        <!-- Main Form -->
+        <div class="bg-white rounded-lg shadow-xl p-6">
+            <form id="tts-form" class="space-y-6">
+                <!-- Text Input -->
+                <div>
+                    <textarea 
+                        id="text-input" 
+                        name="text"
+                        rows="4"
+                        placeholder="Enter your text here..."
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    ></textarea>
+                </div>
+
+                <!-- Options Grid -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Language Selection -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Language</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-3">
+                                <input type="radio" name="language" value="vi-VN" checked class="form-radio text-blue-600">
+                                <span>Vietnamese</span>
+                            </label>
+                            <label class="flex items-center space-x-3">
+                                <input type="radio" name="language" value="en-US" class="form-radio text-blue-600">
+                                <span>English</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Voice Selection -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Voice</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-3">
+                                <input type="radio" name="gender" value="male" checked class="form-radio text-blue-600">
+                                <span>Male Voice</span>
+                            </label>
+                            <label class="flex items-center space-x-3">
+                                <input type="radio" name="gender" value="female" class="form-radio text-blue-600">
+                                <span>Female Voice</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Speed Selection -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Nghe thử với tốc độ:</h3>
+                        <select name="speed" id="speed-select" class="w-full bg-white border border-gray-300 rounded-md py-2 px-3">
+                            <option value="0.75">Slow (0.75x)</option>
+                            <option value="1" selected>Normal (1x)</option>
+                            <option value="1.25">Fast (1.25x)</option>
+                            <option value="1.5">Very Fast (1.5x)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-center">
+                    <button 
+                        type="submit" 
+                        id="convert-button"
+                        class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Convert to Speech
+                    </button>
+                </div>
+            </form>
+
+            <!-- Progress Bar -->
+<div id="progress-container" class="mt-6 hidden">
+    <div class="w-full bg-gray-200 rounded-full h-2">
+        <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300"></div>
+    </div>
+    <p id="progress-text" class="text-sm text-gray-600 mt-2 text-center hidden">Processing... Please wait.</p>
+</div>
+
+<!-- Audio Player -->
+<div id="audio-player" class="mt-8 hidden">
+    <div class="bg-gray-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Audio Preview</h3>
+        <audio id="audio-output" controls class="w-full"></audio>
+
+        <div class="mt-4 space-y-4">
+            <!-- Playback Speed -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Playback Speed</label>
+                <select id="playback-speed" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="0.5">0.5x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2">2x</option>
+                </select>
+            </div>
+
+            <!-- Download Button -->
+            <a 
+    id="download-link" 
+    href="example-audio.mp3" 
+    download="output.mp3"
+    class="inline-flex items-center px-4 py-2 
+           text-sm font-bold rounded-md
+           bg-green-600 text-white
+           hover:bg-green-700 
+           transition duration-150 ease-in-out
+           shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+>
+    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+    Download Audio
+</a>
+
+
+            <p id="download-error" class="text-sm text-red-500 mt-2 hidden">No audio available to download. Please try again.</p>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textInput = document.getElementById('text-input');
+        const convertButton = document.getElementById('convert-button');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const audioPlayer = document.getElementById('audio-player');
+        const downloadLink = document.getElementById('download-link');
+        const audioOutput = document.getElementById('audio-output');
+        const playbackSpeed = document.getElementById('playback-speed');
+
+        // Kiểm tra giá trị của textarea khi trang được tải lần đầu
+        if (textInput.value.trim() === '') {
+            convertButton.disabled = true; // Vô hiệu hóa nút "Chuyển đổi"
+        }
+
+        // Lắng nghe sự kiện 'input' trên textarea
+        textInput.addEventListener('input', function() {
+            // Kiểm tra nếu textarea trống
+            if (this.value.trim() === '') {
+                convertButton.disabled = true; // Vô hiệu hóa nút "Chuyển đổi"
+            } else {
+                convertButton.disabled = false; // Kích hoạt nút "Chuyển đổi"
+            }
+            resetProgressBar(); // Reset thanh tiến trình và thông báo
+        });
+
+        // Lắng nghe sự kiện 'change' trên các radio button
+        document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                resetProgressBar(); // Reset thanh tiến trình và thông báo
+            });
+        });
+
+        // Lắng nghe sự kiện 'submit' trên form
+        document.getElementById('tts-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Ngăn chặn hành vi mặc định của form
+
+            const formData = new FormData(this); // Tạo đối tượng FormData từ form
+            progressContainer.style.display = 'block'; // Hiển thị thanh tiến trình
+            let width = 0;
+
+            // Tạo thanh tiến trình
+            const interval = setInterval(function() {
+                if (width >= 90) {
+                    clearInterval(interval); // Dừng thanh tiến trình khi đạt 90%
+                } else {
+                    width++;
+                    progressBar.style.width = width + '%'; // Cập nhật chiều rộng của thanh tiến trình
+                }
+            }, 50);
+
+            // Gửi yêu cầu POST tới server
+            fetch('/tts/synthesize', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                clearInterval(interval); // Dừng thanh tiến trình
+                progressBar.style.width = '100%'; // Hoàn thành thanh tiến trình
+
+                // Hiển thị thông báo "Thành công!" sau khi thanh tiến trình đạt 100%
+                setTimeout(() => {
+                    progressBar.textContent = 'Thành công!'; // Thay đổi nội dung thành "Thành công!"
+                }, 500);
+
+                // Hiển thị audio player
+                audioOutput.src = data.audio_url; // Đặt URL của audio
+                downloadLink.href = data.audio_url; // Đặt URL cho link tải về
+                
+                audioPlayer.style.display = 'block'; // Hiển thị audio player
+                downloadLink.style.display = 'inline-block'; // Hiển thị link tải về
+
+                // Thêm sự kiện lắng nghe cho việc thay đổi tốc độ phát
+                playbackSpeed.addEventListener('change', function() {
+                    audioOutput.playbackRate = parseFloat(this.value);
+                });
+            })
+            .catch(error => {
+                clearInterval(interval); // Dừng thanh tiến trình
+                progressBar.style.width = '100%';
+                progressBar.textContent = 'Lỗi!'; // Thay đổi nội dung thành "Lỗi!"
+                console.error('Error:', error);
+            });
+        });
+
+        // Hàm reset thanh tiến trình và thông báo
+        function resetProgressBar() {
+            progressBar.style.width = '0%';
+            progressBar.textContent = '';
+            progressContainer.style.display = 'none';
+            audioPlayer.style.display = 'none';
+            downloadLink.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

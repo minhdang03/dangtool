@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}PornHub Downloader{% endblock %}
+
+{% block extra_css %}
+<style>
+    .btn-fancy {
+        background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        border-radius: 25px;
+        box-shadow: 0 4px 15px 0 rgba(255, 154, 158, 0.75);
+    }
+    .btn-fancy:hover {
+        background: linear-gradient(45deg, #fad0c4 0%, #ff9a9e 99%, #ff9a9e 100%);
+        color: white;
+        transform: translateY(-2px);
+    }
+    #progress {
+        transition: width 0.5s ease-in-out;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="text-center mb-4">
+        <a href="{{ url_for('pornhub.listvideo') }}" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110">
+            <i class="fas fa-list-ul mr-2"></i>Xem danh sách video đã tải
+        </a>
+    </div>
+    <h1 class="text-3xl font-bold mb-4 text-center">PornHub Downloader</h1>
+    
+    <div class="mb-4">
+        <input type="text" id="downloadUrl" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://www.pornhub.com/view_video.php?viewkey=ph6335b369c0a39">
+        <button onclick="executeDownload()" class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out">Tải xuống</button>
+    </div>
+
+    <div id="message" class="hidden mb-4 p-2 rounded-md"></div>
+
+    <div id="progress-container" class="hidden mt-4 w-full">
+        <p id="status-text" class="text-sm text-gray-600 mb-2"></p>
+        <div class="w-full bg-gray-200 rounded-full h-6 overflow-hidden shadow-inner">
+            <div id="progress" class="w-0 h-full bg-blue-500 text-xs font-medium text-white text-center leading-6"></div>
+        </div>
+        <p id="progress-text" class="text-sm text-gray-600 mt-2 text-center"></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function executeDownload() {
+        var url = document.getElementById('downloadUrl').value;
+        if (!url) {
+            showMessage('Vui lòng nhập URL video', 'bg-yellow-100 text-yellow-700');
+            return;
+        }
+        
+        document.getElementById('progress-container').classList.add('hidden');
+        showMessage('Link hợp lệ, tiến hành tải xuống', 'bg-blue-100 text-blue-700');
+        
+        fetch('/execute', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({url: url})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status) {
+                document.getElementById('progress-container').classList.remove('hidden');
+                checkProgress();
+            } else {
+                showMessage(data.message, 'bg-red-100 text-red-700');
+            }
+        })
+        .catch(error => {
+            showMessage("Lỗi: " + error, 'bg-red-100 text-red-700');
+        });
+    }
+
+    function showMessage(message, className) {
+        var messageElement = document.getElementById('message');
+        messageElement.textContent = message;
+        messageElement.className = `${className} p-2 rounded-md`;
+        messageElement.classList.remove('hidden');
+    }
+
+    function updateProgress(progress) {
+        const progressBar = document.getElementById('progress');
+        const statusText = document.getElementById('status-text');
+        const progressText = document.getElementById('progress-text');
+
+        if (progress.percent) {
+            progressBar.style.width = progress.percent;
+            progressBar.textContent = progress.percent;
+        }
+
+        statusText.textContent = progress.status || 'Link hợp lệ, tiến hành tải xuống';
+
+        let detailText = 'Hàng đang về';
+        if (progress.speed) {
+            detailText += ` - Tốc độ: ${progress.speed}`;
+        }
+        if (progress.eta) {
+            detailText += ` - Thời gian còn lại: ${progress.eta}`;
+        }
+        progressText.textContent = detailText;
+    }
+
+    function checkProgress() {
+        fetch('/progress')
+        .then(response => response.json())
+        .then(data => {
+            if (data.progress) {
+                const progress = JSON.parse(data.progress);
+                updateProgress(progress);
+                
+                if (progress.status !== "Đã tải xuống xong") {
+                    setTimeout(checkProgress, 1000);
+                } else {
+                    document.getElementById('progress-text').textContent = "Tải xuống hoàn tất!";
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+{% endblock %}
